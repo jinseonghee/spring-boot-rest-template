@@ -1,6 +1,7 @@
 package com.example.client.service;
 
 
+import com.example.client.dto.UserRequest;
 import com.example.client.dto.UserResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -45,5 +46,37 @@ public class RestTemplateService {
         return result.getBody(); //result의 getBody()를 해야 정확한 내용을 볼 수 있음.
                                  //UserResponse를 받을 경우, getBody를 하게 되면 body안에 UserResponse가 들어있기 때문에 return이 String이 아니라
                                  //UserResponse로 바뀜.
+    }
+
+    public UserResponse post() {
+
+        //http://localhost:9090/api/server/user/{userID}/name/{userName} //userId를 pathVariable로 넣어줌(변하는 부분)
+
+        URI uri = UriComponentsBuilder
+                .fromUriString("http://localhost:9090")
+                .path("/api/server/user/{userId}/name/{userName}")
+                .encode() //uri를 safe하게 만듦
+                .build()
+                .expand(100, "steve") //순서대로 {pathVariable}랑 매칭
+                .toUri();
+
+        System.out.println(uri);
+
+        //http body -> object -> object mapper -> json -> rest template -> http body json
+
+        UserRequest req = new UserRequest(); //보내고 싶은 데이터를 json으로 만들 필요 없이 object로 만들어서 object mapper가 json형식으로 바꿈
+        req.setName("steve");
+        req.setAge(10);
+
+        //rest template으로 쏘기
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<UserResponse> response = restTemplate.postForEntity(uri, req,UserResponse.class);//괄호 안에 uri,보내고싶은 데이터,response의 형태 써줌
+        //해당주소에(uri) reqestBody(req)를 만들어서 UserReponse(UserReponse.class)로 응답을 해준다는 의미
+
+        System.out.println(response.getStatusCode());
+        System.out.println(response.getHeaders());
+        System.out.println(response.getBody());
+
+        return response.getBody();
     }
 }
