@@ -1,7 +1,9 @@
 package com.example.server.controller;
 
+import com.example.server.dto.Req;
 import com.example.server.dto.User;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -23,10 +25,28 @@ public class ServerApiController {
     }
 
     @PostMapping("/user/{userId}/name/{userName}") //{userId}, {userName}을 @PathVariable를 이용해 변수로 매칭
-    public User post(@RequestBody User user, @PathVariable int userId, @PathVariable String userName) {
+    public Req<User> post(
+                     //HttpEntity<String> entity, //순수한 HttpEntity가 들어옴(client가 뭘 보냈는지 모를경우 getBody를 찍어보기 위해 사용)
+                     @RequestBody Req<User> user,
+                     @PathVariable int userId,
+                     @PathVariable String userName,
+                     @RequestHeader("x-authorization") String authorization,
+                     @RequestHeader("custom-header") String customHeader
+    ) {
+        //log.info("req : {}", entity.getBody());
         log.info("userId : {}, userName : {}" , userId, userName);
+        log.info("authorization : {}, custom : {}" , authorization, customHeader);
         log.info("client req : {}", user);
 
-        return user;
+        //response 할 때도 똑같이 맞춰서 보내주면 된다.
+        Req<User> response = new Req<>();
+        response.setHeader(
+                new Req.Header() //header에 빈값 아무거나 넣음
+        );
+        response.setResBody(
+                user.getResBody()
+        );
+
+        return response;
     }
 }

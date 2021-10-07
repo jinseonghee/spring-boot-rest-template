@@ -1,5 +1,6 @@
 package com.example.client.controller;
 
+import com.example.client.dto.Req;
 import com.example.client.dto.UserResponse;
 import com.example.client.service.RestTemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +20,7 @@ public class ApiController {
     }
 
     @GetMapping("/hello")
-    public UserResponse gethello() {
-        return restTemplateService.post(); //controller로 get으로 요청이 들어오면 restTemplateService 통해서 server로 호출해서
-                                            //응답을 받아서 response를 내림
+    public Req<UserResponse> gethello() {
+        return restTemplateService.genericExchange();
     }
 }

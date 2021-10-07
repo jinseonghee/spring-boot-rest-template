@@ -1,11 +1,14 @@
 package com.example.client.service;
 
 
+import com.example.client.dto.Req;
 import com.example.client.dto.UserRequest;
 import com.example.client.dto.UserResponse;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -64,7 +67,6 @@ public class RestTemplateService {
         System.out.println(uri);
 
         //http body -> object -> object mapper -> json -> rest template -> http body json
-
         UserRequest req = new UserRequest(); //보내고 싶은 데이터를 json으로 만들 필요 없이 object로 만들어서 object mapper가 json형식으로 바꿈
         req.setName("steve");
         req.setAge(10);
@@ -77,6 +79,81 @@ public class RestTemplateService {
         System.out.println(response.getStatusCode());
         System.out.println(response.getHeaders());
         System.out.println(response.getBody());
+
+        return response.getBody();
+    }
+
+    public UserResponse exchange() {
+
+        URI uri = UriComponentsBuilder
+                .fromUriString("http://localhost:9090")
+                .path("/api/server/user/{userId}/name/{userName}")
+                .encode()
+                .build()
+                .expand(100, "steve")
+                .toUri();
+
+        System.out.println(uri);
+
+        //http body -> object -> object mapper -> json -> rest template -> http body json
+        UserRequest req = new UserRequest();
+        req.setName("steve");
+        req.setAge(10);
+
+        //class type, requestEntity 넣어서 호출하는 방법
+        RequestEntity<UserRequest> requestEntity = RequestEntity
+                .post(uri)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("x-authorization", "abcd")
+                .header("custom-header", "fffff")
+                .body(req);
+
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<UserResponse> response = restTemplate.exchange(requestEntity, UserResponse.class);
+        return response.getBody();
+    }
+
+    public Req<UserResponse> genericExchange() {
+
+        URI uri = UriComponentsBuilder
+                .fromUriString("http://localhost:9090")
+                .path("/api/server/user/{userId}/name/{userName}")
+                .encode()
+                .build()
+                .expand(100, "steve")
+                .toUri();
+
+        System.out.println(uri);
+
+        //http body -> object -> object mapper -> json -> rest template -> http body json
+
+        UserRequest userRequest = new UserRequest();
+        userRequest.setName("steve");
+        userRequest.setAge(10);
+
+        Req<UserRequest> req = new Req<>(); //Req의 body는 제네릭 타입으로 설정해 주었고, UserRequest가 body로 들어갈 거기 떄문에 <UserRequest>를 넣어줌
+
+        req.setHeader(
+            new Req.Header()
+        );
+
+        req.setResBody(
+                userRequest
+        );
+
+        RequestEntity<Req<UserRequest>> requestEntity = RequestEntity //RequestEntity도 Req가 body로 가지고 있는 UserRequest로 한번 감싼다.
+                .post(uri)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("x-authorization", "abcd")
+                .header("custom-header", "fffff")
+                .body(req);
+
+        //requestEntity를 restTemplete로 보내기
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<Req<UserResponse>> response
+                = restTemplate.exchange(requestEntity, new ParameterizedTypeReference<>(){});
+                //generic에는 Req<UserResponse>.class 이렇게 class를 붙일 수 없다. 해서  ParameterizedTypeReference를 class 대신 사용
 
         return response.getBody();
     }
